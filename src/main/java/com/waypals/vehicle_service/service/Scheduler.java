@@ -153,8 +153,9 @@ public class Scheduler {
     }
 
 
-    @Scheduled(cron = "00 40 16 * * *", zone = "IST")
+    @Scheduled(cron = "00 20 11 * * *", zone = "UTC")
     public void processVehicleNumbers() throws MessagingException {
+        log.info("<----------- Job Started --------------->");
         List<String> vehicleNumbers = null;
         try {
             vehicleNumbers = excelService.getVehicleNumbers();
@@ -228,6 +229,7 @@ public class Scheduler {
             }
             count+=1;
         }
+        log.info("<----------- Job Ended --------------->");
 
     }
 }
