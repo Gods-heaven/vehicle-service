@@ -15,3 +15,6 @@ email:
   active: "support@waypals.com"
 excel:
   filePath: /Users/ashishuniyal/Downloads/vehicle.xlsx
+cron:
+  time: 00 59 16 * * *
+  zone: IST

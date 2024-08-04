@@ -153,7 +153,7 @@ public class Scheduler {
     }
 
 
-    @Scheduled(cron = "00 20 11 * * *", zone = "UTC")
+    @Scheduled(cron = "${cron.time}", zone = "${cron.zone}")
     public void processVehicleNumbers() throws MessagingException {
         log.info("<----------- Job Started --------------->");
         List<String> vehicleNumbers = null;
