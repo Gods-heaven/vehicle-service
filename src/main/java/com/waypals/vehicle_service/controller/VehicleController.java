@@ -58,23 +58,15 @@ public class VehicleController {
     }
 
     @PostMapping("/vehicle-numbers")
-    public ResponseEntity<List<String>> getVehicleNumbers(@RequestPart("file") MultipartFile file, Model model) {
+    public ResponseEntity<String> getVehicleNumbers(@RequestPart("file") MultipartFile file, Model model) {
         try {
             List<String> vehicleNumbers = excelService.getVehicleNumbers(file);
-            for(String registrationNumber: vehicleNumbers){
-                VehicleAggregate vehicleAggregate = vehicleRepository.findByRegistrationNumber(registrationNumber);
-                List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
-                if(!user.isEmpty()){
-                    scheduler.sendEmailUser(user.get(0),model);
-                }
-            }
-            return new ResponseEntity<>(vehicleNumbers, HttpStatus.OK);
+            scheduler.processVehicleNumbers(vehicleNumbers, model);
+            return new ResponseEntity<>("Sending Mail to the user started", HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
         }
     }
 

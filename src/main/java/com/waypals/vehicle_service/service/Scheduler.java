@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.thymeleaf.TemplateEngine;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -106,5 +108,22 @@ public class Scheduler {
         LocalDateTime dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         return dateTime.format(formatter);
+    }
+
+    @Async
+    public void processVehicleNumbers(List<String> vehicleNumbers, Model model) {
+        for (String registrationNumber : vehicleNumbers) {
+            VehicleAggregate vehicleAggregate = vehicleRepository.findByRegistrationNumber(registrationNumber);
+            if (vehicleAggregate != null) {
+                List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
+                if (!user.isEmpty()) {
+                    try {
+                        sendEmailUser(user.get(0), model);
+                    } catch (MessagingException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 }
