@@ -1,0 +1,15 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/waypals
+
+email:
+  smtp:
+    username: support@waypals.com
+    host: smtp.gmail.com
+    password: support@321
+    port: 587
+  mailType: "html"
+  charset: "iso-8859-1"
+  wordwrap: "TRUE"
+  active: "support@waypals.com"
