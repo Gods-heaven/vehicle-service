@@ -11,12 +11,16 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
+import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -27,9 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -55,6 +57,9 @@ public class Scheduler {
 
     @Autowired
     ExcelService excelService;
+
+    @Autowired
+    RestTemplate restTemplate;
 
 
     public void sendEmailUser(VehicleUser vehicleUser, Model model) throws MessagingException {
@@ -94,7 +99,7 @@ public class Scheduler {
 
     }
 
-    void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
+    public void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
 //        emailAddress = "sl@waypals.com";
         emailAddress = "diviyabhardwaz@gmail.com";
         Long startTime = System.currentTimeMillis();
@@ -175,47 +180,7 @@ public class Scheduler {
                         if(vehicleState.isPresent()){
                             List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
                             log.info("user size :: {}", user.size());
-                            sendEmail(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()), new Model() {
-                                @Override
-                                public Model addAttribute(String attributeName, Object attributeValue) {
-                                    return null;
-                                }
-
-                                @Override
-                                public Model addAttribute(Object attributeValue) {
-                                    return null;
-                                }
-
-                                @Override
-                                public Model addAllAttributes(Collection<?> attributeValues) {
-                                    return null;
-                                }
-
-                                @Override
-                                public Model addAllAttributes(Map<String, ?> attributes) {
-                                    return null;
-                                }
-
-                                @Override
-                                public Model mergeAttributes(Map<String, ?> attributes) {
-                                    return null;
-                                }
-
-                                @Override
-                                public boolean containsAttribute(String attributeName) {
-                                    return false;
-                                }
-
-                                @Override
-                                public Object getAttribute(String attributeName) {
-                                    return null;
-                                }
-
-                                @Override
-                                public Map<String, Object> asMap() {
-                                    return Map.of();
-                                }
-                            });
+                            sendEmailRest(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()));
                         }
                         else{
                             log.info("Vehicle state not present for  :: {}", vehicleAggregate.getVehicleId());
@@ -232,4 +197,28 @@ public class Scheduler {
         log.info("<----------- Job Ended --------------->");
 
     }
+
+
+    public ResponseEntity<String> sendEmailRest(String emailAddress, String name, String registrationNumber, String lastDate) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/x-www-form-urlencoded");
+
+        String requestBody = "emailAddress=" + emailAddress +
+                "&name=" + name +
+                "&registrationNumber=" + registrationNumber +
+                "&lastDate=" + lastDate;
+
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "http://localhost:8080/sendEmail",
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        return response;
+    }
+
+
 }

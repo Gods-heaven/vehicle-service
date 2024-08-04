@@ -1,7 +1,5 @@
 package com.waypals.vehicle_service.controller;
 
-import com.waypals.vehicle_service.entity.VehicleAggregate;
-import com.waypals.vehicle_service.entity.VehicleUser;
 import com.waypals.vehicle_service.repository.UserRepository;
 import com.waypals.vehicle_service.repository.VehicleRepository;
 import com.waypals.vehicle_service.repository.VehicleStateRepository;
@@ -70,5 +68,15 @@ public class VehicleController {
             throw new RuntimeException(e);
         }
     }
+    @PostMapping("/sendEmail")
+    public ResponseEntity<String> sendEmail(
+            @RequestParam String emailAddress,
+            @RequestParam String name,
+            @RequestParam String registrationNumber,
+            @RequestParam String lastDate,
+            Model model) throws MessagingException {
+            scheduler.sendEmail(emailAddress,name, registrationNumber, lastDate,model);
+            return ResponseEntity.ok().body("Mail Sent successfully");
+        }
 
 }
