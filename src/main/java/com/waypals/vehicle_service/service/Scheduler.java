@@ -14,18 +14,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -49,9 +53,13 @@ public class Scheduler {
     @Value("${email.active}")
     String from;
 
+    @Autowired
+    ExcelService excelService;
+
 
     public void sendEmailUser(VehicleUser vehicleUser, Model model) throws MessagingException {
         if(vehicleUser==null){
+            log.info("vehicle user is null ");
             for(VehicleUser user : userRepository.findAll()){
                 for(VehicleUser.Arm arm: user.getArms()){
 
@@ -68,11 +76,12 @@ public class Scheduler {
             }
         }
         else{
+            log.info("<----------------- Got Vehicle user ----------------->");
             for(VehicleUser.Arm arm: vehicleUser.getArms()){
                 if(!arm.isDeactivated()){
-                    log.info("!arm.isDeactivated()  :{}",!arm.isDeactivated());
+                    log.info("user id :: {} name::{} vehicleId :: {}",vehicleUser.getUserId(),vehicleUser.getUser().getName().getFirstName(),arm.getVehicleId());
                     if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(arm.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli())){
-                        log.info("vehicleId :: {}",arm.getVehicleId());
+
                         Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(arm.getVehicleId());
                         Optional<VehicleAggregate> vehicleAggregate = vehicleRepository.findByVehicleId(arm.getVehicleId());
                         sendEmail(vehicleUser.getUser().getEmail().getEmail(), vehicleUser.getUser().getName().getFirstName(), vehicleAggregate.isPresent()?vehicleAggregate.get().getVehicle().getMetadata().getRegistrationNo(): "DIVU143", vehicleState.isPresent()? convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()): LocalDate.now().toString(),model);
@@ -86,8 +95,9 @@ public class Scheduler {
     }
 
     void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
-        emailAddress = "sl@waypals.com";
-//        emailAddress = "diviyabhardwaz@gmail.com";
+//        emailAddress = "sl@waypals.com";
+        Long startTime = System.currentTimeMillis();
+        emailAddress = "diviyabhardwaz@gmail.com";
         Context context = new Context();
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
@@ -110,20 +120,114 @@ public class Scheduler {
         return dateTime.format(formatter);
     }
 
-    @Async
-    public void processVehicleNumbers(List<String> vehicleNumbers, Model model) {
+
+    public void processVehicleNumbers(List<String> vehicleNumbers, Model model) throws MessagingException {
+        int count = 1;
         for (String registrationNumber : vehicleNumbers) {
+            log.info("List count  :: {}", count);
             VehicleAggregate vehicleAggregate = vehicleRepository.findByRegistrationNumber(registrationNumber);
+            try{
             if (vehicleAggregate != null) {
-                List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
-                if (!user.isEmpty()) {
-                    try {
-                        sendEmailUser(user.get(0), model);
-                    } catch (MessagingException e) {
-                        e.printStackTrace();
+                log.info("registrationNumber :: {}", registrationNumber);
+                if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(vehicleAggregate.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli()));
+                {
+                    Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(vehicleAggregate.getVehicleId());
+                    if(vehicleState.isPresent()){
+                        List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
+                        log.info("user size :: {}", user.size());
+                        sendEmail(user.get(0).getUser().getEmail().getEmail(),user.get(0).getUser().getName().getFirstName(),vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(),convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()), model);
+                    }
+                    else{
+                        log.info("Vehicle state not present for  :: {}", vehicleAggregate.getVehicleId());
                     }
                 }
+
+
+            }}
+            catch (Exception e){
+                log.info("Exception :: {}",e.getMessage());
             }
+            count+=1;
         }
+
+    }
+
+
+    @Scheduled(cron = "00 00 1 * * *", zone = "IST")
+    public void processVehicleNumbers() throws MessagingException {
+        List<String> vehicleNumbers = null;
+        try {
+            vehicleNumbers = excelService.getVehicleNumbers();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        int count = 1;
+        for (String registrationNumber : vehicleNumbers) {
+            log.info("List count  :: {}", count);
+            VehicleAggregate vehicleAggregate = vehicleRepository.findByRegistrationNumber(registrationNumber);
+            try{
+                if (vehicleAggregate != null) {
+                    log.info("registrationNumber :: {}", registrationNumber);
+                    if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(vehicleAggregate.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli()));
+                    {
+                        Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(vehicleAggregate.getVehicleId());
+                        if(vehicleState.isPresent()){
+                            List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
+                            log.info("user size :: {}", user.size());
+                            sendEmail(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()), new Model() {
+                                @Override
+                                public Model addAttribute(String attributeName, Object attributeValue) {
+                                    return null;
+                                }
+
+                                @Override
+                                public Model addAttribute(Object attributeValue) {
+                                    return null;
+                                }
+
+                                @Override
+                                public Model addAllAttributes(Collection<?> attributeValues) {
+                                    return null;
+                                }
+
+                                @Override
+                                public Model addAllAttributes(Map<String, ?> attributes) {
+                                    return null;
+                                }
+
+                                @Override
+                                public Model mergeAttributes(Map<String, ?> attributes) {
+                                    return null;
+                                }
+
+                                @Override
+                                public boolean containsAttribute(String attributeName) {
+                                    return false;
+                                }
+
+                                @Override
+                                public Object getAttribute(String attributeName) {
+                                    return null;
+                                }
+
+                                @Override
+                                public Map<String, Object> asMap() {
+                                    return Map.of();
+                                }
+                            });
+                        }
+                        else{
+                            log.info("Vehicle state not present for  :: {}", vehicleAggregate.getVehicleId());
+                        }
+                    }
+
+
+                }}
+            catch (Exception e){
+                log.info("Exception :: {}",e.getMessage());
+            }
+            count+=1;
+        }
+
     }
 }
