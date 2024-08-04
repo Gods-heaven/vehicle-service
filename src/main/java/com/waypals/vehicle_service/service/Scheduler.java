@@ -101,7 +101,6 @@ public class Scheduler {
 
     public void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
 //        emailAddress = "sl@waypals.com";
-        emailAddress = "diviyabhardwaz@gmail.com";
         Long startTime = System.currentTimeMillis();
         Context context = new Context();
         MimeMessage message = mailSender.createMimeMessage();
