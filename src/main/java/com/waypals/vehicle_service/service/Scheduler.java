@@ -96,6 +96,7 @@ public class Scheduler {
 
     void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
 //        emailAddress = "sl@waypals.com";
+        emailAddress = "diviyabhardwaz@gmail.com";
         Long startTime = System.currentTimeMillis();
         Context context = new Context();
         MimeMessage message = mailSender.createMimeMessage();
@@ -152,7 +153,7 @@ public class Scheduler {
     }
 
 
-    @Scheduled(cron = "00 00 1 * * *", zone = "IST")
+    @Scheduled(cron = "00 40 16 * * *", zone = "IST")
     public void processVehicleNumbers() throws MessagingException {
         List<String> vehicleNumbers = null;
         try {
