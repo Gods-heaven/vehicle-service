@@ -2,9 +2,12 @@ package com.waypals.vehicle_service.service;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,10 +15,13 @@ import java.util.List;
 @Service
 public class ExcelService {
 
-    public List<String> getVehicleNumbers(MultipartFile file) throws IOException {
+    @Value("${excel.filePath}")
+    String filePath;
+
+    public List<String> getVehicleNumbers() throws IOException {
         List<String> vehicleNumbers = new ArrayList<>();
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+        try (Workbook workbook = new XSSFWorkbook(new FileInputStream(filePath))) {
             Sheet sheet = workbook.getSheetAt(0);
 
             if (sheet == null) {

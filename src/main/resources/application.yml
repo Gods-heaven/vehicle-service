@@ -13,3 +13,5 @@ email:
   charset: "iso-8859-1"
   wordwrap: "TRUE"
   active: "support@waypals.com"
+excel:
+  filePath: /Users/ashishuniyal/Downloads/vehicle.xlsx

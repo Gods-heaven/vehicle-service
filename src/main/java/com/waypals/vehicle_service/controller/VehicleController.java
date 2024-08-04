@@ -58,15 +58,15 @@ public class VehicleController {
     }
 
     @PostMapping("/vehicle-numbers")
-    public ResponseEntity<String> getVehicleNumbers(@RequestPart("file") MultipartFile file, Model model) {
+    public ResponseEntity<String> getVehicleNumbers(Model model) {
         try {
-            List<String> vehicleNumbers = excelService.getVehicleNumbers(file);
+            List<String> vehicleNumbers = excelService.getVehicleNumbers();
             scheduler.processVehicleNumbers(vehicleNumbers, model);
             return new ResponseEntity<>("Sending Mail to the user started", HttpStatus.OK);
         } catch (IOException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
