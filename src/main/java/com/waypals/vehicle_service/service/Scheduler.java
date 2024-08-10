@@ -55,6 +55,12 @@ public class Scheduler {
     @Value("${email.active}")
     String from;
 
+    @Value("${email.cc}")
+    String cc;
+
+    @Value("${email.bcc}")
+    String bcc;
+
     @Autowired
     ExcelService excelService;
 
@@ -107,6 +113,8 @@ public class Scheduler {
         MimeMessageHelper helper = new MimeMessageHelper(message);
         helper.setSubject("Data Missing");
         helper.setFrom(from);
+        helper.setCc(cc);
+        helper.setBcc(bcc);
         helper.setTo(emailAddress);
         model.addAttribute("userName",name);
         model.addAttribute("vehicleRegistrationNo",registrationNumber);

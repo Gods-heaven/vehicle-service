@@ -13,8 +13,10 @@ email:
   charset: "iso-8859-1"
   wordwrap: "TRUE"
   active: "support@waypals.com"
+  cc: "shekhar.sinha@sita.in"
+  bcc: "sl@waypals.com"
 excel:
   filePath: /Users/ashishuniyal/Downloads/vehicle.xlsx
 cron:
-  time: 00 59 16 * * *
+  time: 00 57 17 * * *
   zone: IST
