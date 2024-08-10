@@ -68,46 +68,9 @@ public class Scheduler {
     RestTemplate restTemplate;
 
 
-    public void sendEmailUser(VehicleUser vehicleUser, Model model) throws MessagingException {
-        if(vehicleUser==null){
-            log.info("vehicle user is null ");
-            for(VehicleUser user : userRepository.findAll()){
-                for(VehicleUser.Arm arm: user.getArms()){
-
-                    if(!arm.isDeactivated()){
-                        log.info("!arm.isDeactivated()  :{}",!arm.isDeactivated());
-                        if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(arm.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli())){
-                            log.info("vehicleId :: {}",arm.getVehicleId());
-                            Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(arm.getVehicleId());
-                            Optional<VehicleAggregate> vehicleAggregate = vehicleRepository.findByVehicleId(arm.getVehicleId());
-                            sendEmail(user.getUser().getEmail().getEmail(), user.getUser().getName().getFirstName(), vehicleAggregate.isPresent()?vehicleAggregate.get().getVehicle().getMetadata().getRegistrationNo(): "DIVU143", vehicleState.map(state -> convertMillisToDate(state.getDateTime().getDateInMillis())).orElseGet(() -> LocalDate.now().toString()),model);
-                        }
-                    }
-                }
-            }
-        }
-        else{
-            log.info("<----------------- Got Vehicle user ----------------->");
-            for(VehicleUser.Arm arm: vehicleUser.getArms()){
-                if(!arm.isDeactivated()){
-                    log.info("user id :: {} name::{} vehicleId :: {}",vehicleUser.getUserId(),vehicleUser.getUser().getName().getFirstName(),arm.getVehicleId());
-                    if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(arm.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli())){
-
-                        Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(arm.getVehicleId());
-                        Optional<VehicleAggregate> vehicleAggregate = vehicleRepository.findByVehicleId(arm.getVehicleId());
-                        sendEmail(vehicleUser.getUser().getEmail().getEmail(), vehicleUser.getUser().getName().getFirstName(), vehicleAggregate.isPresent()?vehicleAggregate.get().getVehicle().getMetadata().getRegistrationNo(): "DIVU143", vehicleState.isPresent()? convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()): LocalDate.now().toString(),model);
-                    }
-                }
-            }
-        }
-
-
-
-    }
 
     public void sendEmail(String emailAddress, String name, String registrationNumber, String date, Model model) throws MessagingException {
 //        emailAddress = "sl@waypals.com";
-        Long startTime = System.currentTimeMillis();
         Context context = new Context();
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);

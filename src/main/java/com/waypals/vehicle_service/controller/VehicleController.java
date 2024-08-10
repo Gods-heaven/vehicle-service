@@ -51,11 +51,6 @@ public class VehicleController {
     }
 
 
-    @GetMapping("/sendEmail")
-    public void senEmail(Model model) throws MessagingException {
-        scheduler.sendEmailUser(null,model);
-    }
-
     @PostMapping("/vehicle-numbers")
     public ResponseEntity<String> getVehicleNumbers(Model model) {
         try {
