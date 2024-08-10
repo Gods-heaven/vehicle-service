@@ -80,7 +80,7 @@ public class Scheduler {
                             log.info("vehicleId :: {}",arm.getVehicleId());
                             Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(arm.getVehicleId());
                             Optional<VehicleAggregate> vehicleAggregate = vehicleRepository.findByVehicleId(arm.getVehicleId());
-                            sendEmail(user.getUser().getEmail().getEmail(), user.getUser().getName().getFirstName(), vehicleAggregate.isPresent()?vehicleAggregate.get().getVehicle().getMetadata().getRegistrationNo(): "DIVU143", vehicleState.isPresent()? convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()): LocalDate.now().toString(),model);
+                            sendEmail(user.getUser().getEmail().getEmail(), user.getUser().getName().getFirstName(), vehicleAggregate.isPresent()?vehicleAggregate.get().getVehicle().getMetadata().getRegistrationNo(): "DIVU143", vehicleState.map(state -> convertMillisToDate(state.getDateTime().getDateInMillis())).orElseGet(() -> LocalDate.now().toString()),model);
                         }
                     }
                 }
@@ -228,4 +228,7 @@ public class Scheduler {
     }
 
 
+    public Optional<VehicleState> getLatestVehicleState(long vehicleId) {
+        return vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(vehicleId);
+    }
 }

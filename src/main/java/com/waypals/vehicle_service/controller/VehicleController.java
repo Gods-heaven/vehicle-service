@@ -1,5 +1,6 @@
 package com.waypals.vehicle_service.controller;
 
+import com.waypals.vehicle_service.entity.VehicleState;
 import com.waypals.vehicle_service.repository.UserRepository;
 import com.waypals.vehicle_service.repository.VehicleRepository;
 import com.waypals.vehicle_service.repository.VehicleStateRepository;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -77,6 +79,11 @@ public class VehicleController {
             Model model) throws MessagingException {
             scheduler.sendEmail(emailAddress,name, registrationNumber, lastDate,model);
             return ResponseEntity.ok().body("Mail Sent successfully");
+        }
+
+        @GetMapping("/vehicleState")
+    public ResponseEntity<Optional<VehicleState>> getVehicleState(@RequestParam long vehicleId){
+        return ResponseEntity.ok().body(scheduler.getLatestVehicleState(vehicleId));
         }
 
 }
