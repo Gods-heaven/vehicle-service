@@ -81,7 +81,7 @@ public class VehicleController {
             return ResponseEntity.ok().body("Mail Sent successfully");
         }
 
-        @GetMapping("/vehicleState")
+        @GetMapping("/vehicleState/get")
     public ResponseEntity<Optional<VehicleState>> getVehicleState(@RequestParam long vehicleId){
         return ResponseEntity.ok().body(scheduler.getLatestVehicleState(vehicleId));
         }
