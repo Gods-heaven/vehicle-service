@@ -149,12 +149,8 @@ public class Scheduler {
                     {
                         if(vehicleState.isPresent() && vehicleState.get().getDateTime().getDateInMillis()<Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli()){
                             List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
-                            log.info("user size :: {}", user.size());
-                            log.info("email will be sent to user :: {}",user.get(0).getUser().getEmail().getEmail());
-//                            sendEmailRest(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()));
-                        }
-                        else{
-                            log.info("Vehicle state not present for  :: {}", vehicleAggregate.getVehicleId());
+                            log.info("email will be sent to user :: {} registration Number :: {}",user.get(0).getUser().getEmail().getEmail(), registrationNumber);
+                            sendEmailRest(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()));
                         }
                     }
                 }}
