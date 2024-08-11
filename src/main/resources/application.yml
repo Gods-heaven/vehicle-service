@@ -18,5 +18,5 @@ email:
 excel:
   filePath: /home/ubuntu/excel/vehicle.xlsx
 cron:
-  time: 00 00 01 * * *
+  time: 00 16 12 * * *
   zone: IST

@@ -144,20 +144,19 @@ public class Scheduler {
             try{
                 if (vehicleAggregate != null) {
                     log.info("registrationNumber :: {}", registrationNumber);
-                    if(!vehicleStateRepository.existsByVehicleIdAndDateTimeDateInMillisBetween(vehicleAggregate.getVehicleId(), Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli(),Instant.now().toEpochMilli()));
+                    Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(vehicleAggregate.getVehicleId());
+                    log.info("vehicle State :: {}",vehicleState.isPresent()? vehicleState.get() : vehicleAggregate.getVehicleId());
                     {
-                        Optional<VehicleState> vehicleState = vehicleStateRepository.findTopByVehicleIdOrderByDateTimeDateInMillisDesc(vehicleAggregate.getVehicleId());
-                        if(vehicleState.isPresent()){
+                        if(vehicleState.isPresent() && vehicleState.get().getDateTime().getDateInMillis()<Instant.now().minus(10, ChronoUnit.DAYS).toEpochMilli()){
                             List<VehicleUser> user = userRepository.findByVehicleIdInArms(vehicleAggregate.getVehicleId());
                             log.info("user size :: {}", user.size());
-                            sendEmailRest(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()));
+                            log.info("email will be sent to user :: {}",user.get(0).getUser().getEmail().getEmail());
+//                            sendEmailRest(user.get(0).getUser().getEmail().getEmail(), user.get(0).getUser().getName().getFirstName(), vehicleAggregate.getVehicle().getMetadata().getRegistrationNo(), convertMillisToDate(vehicleState.get().getDateTime().getDateInMillis()));
                         }
                         else{
                             log.info("Vehicle state not present for  :: {}", vehicleAggregate.getVehicleId());
                         }
                     }
-
-
                 }}
             catch (Exception e){
                 log.info("Exception :: {}",e.getMessage());
